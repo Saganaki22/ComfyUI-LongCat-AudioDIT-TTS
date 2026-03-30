@@ -1,4 +1,3 @@
-import io
 import logging
 from typing import Tuple
 
@@ -42,13 +41,6 @@ except ImportError:
     _MM = False
 
 logger = logging.getLogger("LongCatAudioDiT")
-
-
-def _load_audio_tensor(audio_path: str, sr: int) -> torch.Tensor:
-    import librosa
-
-    audio, _ = librosa.load(audio_path, sr=sr, mono=True)
-    return torch.from_numpy(audio).unsqueeze(0)
 
 
 def comfy_audio_to_tensor(audio_dict: dict, target_sr: int) -> torch.Tensor:
@@ -231,6 +223,14 @@ class LongCatVoiceCloneTTS:
 
         logger.info("Encoding prompt audio...")
         prompt_wav = comfy_audio_to_tensor(prompt_audio, sr).to(model.device)
+
+        # Warn if reference audio is too long
+        prompt_duration = prompt_wav.shape[-1] / sr
+        if prompt_duration > 30:
+            logger.warning(
+                f"Reference audio is {prompt_duration:.1f}s — longer than recommended 30s. "
+                "This may cause issues with generation."
+            )
 
         if pbar:
             pbar.update_absolute(1, 4)

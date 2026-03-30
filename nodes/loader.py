@@ -192,11 +192,6 @@ def resolve_device(device_choice: str) -> tuple[str, torch.dtype]:
     if device_choice == "auto":
         if torch.cuda.is_available():
             dtype = torch.bfloat16 if _supports_bfloat16() else torch.float16
-            if dtype == torch.float16:
-                logger.info(
-                    "GPU does not support bfloat16 (compute capability < 8.0) — "
-                    "using float16 instead."
-                )
             return "cuda", dtype
         if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
             return "mps", torch.float16
@@ -204,10 +199,6 @@ def resolve_device(device_choice: str) -> tuple[str, torch.dtype]:
         return "cpu", torch.float32
     if device_choice == "cuda":
         dtype = torch.bfloat16 if _supports_bfloat16() else torch.float16
-        if dtype == torch.float16:
-            logger.info(
-                "GPU does not support bfloat16 — using float16 for CUDA device."
-            )
         return "cuda", dtype
     if device_choice == "mps":
         return "mps", torch.float16

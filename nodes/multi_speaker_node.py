@@ -317,6 +317,13 @@ if _V3:
                 else:
                     logger.info(f"Loading reference audio for speaker {i}...")
                     ref_tensor = comfy_audio_to_tensor(speaker_audio, sr).to(model.device)
+                    # Warn if reference audio is too long
+                    ref_duration = ref_tensor.shape[-1] / sr
+                    if ref_duration > 30:
+                        logger.warning(
+                            f"Speaker {i} reference audio is {ref_duration:.1f}s — "
+                            "longer than recommended 30s. This may cause issues."
+                        )
                     references[i - 1] = (ref_tensor, speaker_ref_text.strip())
 
             if missing:
@@ -553,6 +560,13 @@ else:
                 else:
                     logger.info(f"Loading reference audio for speaker {i}...")
                     ref_tensor = comfy_audio_to_tensor(speaker_audio, sr).to(model.device)
+                    # Warn if reference audio is too long
+                    ref_duration = ref_tensor.shape[-1] / sr
+                    if ref_duration > 30:
+                        logger.warning(
+                            f"Speaker {i} reference audio is {ref_duration:.1f}s — "
+                            "longer than recommended 30s. This may cause issues."
+                        )
                     references[i - 1] = (ref_tensor, speaker_ref_text.strip())
 
             if missing:

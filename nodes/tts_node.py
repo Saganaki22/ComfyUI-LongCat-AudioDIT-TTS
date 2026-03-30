@@ -174,8 +174,6 @@ class LongCatTTS:
             model_path, device, dtype, attention, keep_model_loaded
         )
 
-        import soundfile as sf
-
         pbar = ProgressBar(3) if _PBAR else None
 
         text_norm = normalize_text(text)
