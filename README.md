@@ -8,6 +8,7 @@
   <p>
     <a href="https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(FP32)-blue' alt="HF Model FP32"></a>
     <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(BF16)-orange' alt="HF Model BF16"></a>
+    <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(FP8)-purple' alt="HF Model FP8"></a>
     <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
     <img src="https://img.shields.io/badge/version-0.1.1-blue" alt="Version">
   </p>
