@@ -363,12 +363,18 @@ def _patch_flash_attention(model):
         logger.info("Using flash_attn package directly for FlashAttention.")
     except ImportError:
         _has_flash_attn = False
-        # Fall back to SDPA with FlashAttention backend
-        try:
-            from torch.nn.attention import SDPBackend, sdpa_kernel
-            _has_sdpa_kernel = True
+
+    # Also try to import SDPA kernel for fallback (needed when flash_attn doesn't support masks)
+    _sdpa_kernel = None
+    _SDPBackend = None
+    try:
+        from torch.nn.attention import SDPBackend, sdpa_kernel as _sdpa_kernel_impl
+        _sdpa_kernel = _sdpa_kernel_impl
+        _SDPBackend = SDPBackend
+        if not _has_flash_attn:
             logger.info("Using SDPA with FlashAttention backend preference.")
-        except ImportError:
+    except ImportError:
+        if not _has_flash_attn:
             logger.warning(
                 "FlashAttention requested but neither flash_attn package nor "
                 "torch.nn.attention.sdpa_kernel available. Falling back to default SDPA."
@@ -416,10 +422,10 @@ def _patch_flash_attention(model):
             v = value.transpose(1, 2)
             x = flash_attn_func(q, k, v, dropout_p=0.0, causal=False)
             x = x.transpose(1, 2)  # Back to (batch, nheads, seqlen, headdim)
-        else:
+        elif _sdpa_kernel is not None:
             # Use SDPA with FlashAttention preference
             try:
-                with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+                with _sdpa_kernel(_SDPBackend.FLASH_ATTENTION):
                     x = F.scaled_dot_product_attention(
                         query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
                     )
@@ -436,6 +442,11 @@ def _patch_flash_attention(model):
                     )
                 else:
                     raise
+        else:
+            # Fallback to plain SDPA
+            x = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
+            )
 
         x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
         x = self.to_out[0](x)
@@ -464,7 +475,7 @@ def _patch_flash_attention(model):
         if cond_rope is not None:
             key = _apply_rotary_emb(key, cond_rope)
 
-        # Cross-attention often has masks, use SDPA for compatibility
+        # Cross-attention often has masks
         attn_mask = None
         if mask is not None:
             attn_mask = (
@@ -474,12 +485,24 @@ def _patch_flash_attention(model):
                 batch_size, self.heads, query.shape[-2], key.shape[-2]
             )
 
-        if attn_mask is not None or not _has_flash_attn:
-            # Use SDPA when we have masks or no flash_attn package
+        if attn_mask is not None:
+            # flash_attn doesn't support masks, use plain SDPA
+            x = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+            )
+        elif _has_flash_attn:
+            # Use flash_attn package directly
+            q = query.transpose(1, 2)
+            k = key.transpose(1, 2)
+            v = value.transpose(1, 2)
+            x = flash_attn_func(q, k, v, dropout_p=0.0, causal=False)
+            x = x.transpose(1, 2)
+        elif _sdpa_kernel is not None:
+            # Use SDPA with FlashAttention preference
             try:
-                with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+                with _sdpa_kernel(_SDPBackend.FLASH_ATTENTION):
                     x = F.scaled_dot_product_attention(
-                        query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+                        query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
                     )
             except RuntimeError as e:
                 if "No available kernel" in str(e):
@@ -490,17 +513,15 @@ def _patch_flash_attention(model):
                         )
                         _flash_fallback_warned = True
                     x = F.scaled_dot_product_attention(
-                        query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+                        query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
                     )
                 else:
                     raise
         else:
-            # Use flash_attn package directly
-            q = query.transpose(1, 2)
-            k = key.transpose(1, 2)
-            v = value.transpose(1, 2)
-            x = flash_attn_func(q, k, v, dropout_p=0.0, causal=False)
-            x = x.transpose(1, 2)
+            # Fallback to plain SDPA
+            x = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
+            )
 
         x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
         x = self.to_out[0](x)
