@@ -10,6 +10,9 @@ import torch.nn.functional as F
 
 logger = logging.getLogger("LongCatAudioDiT")
 
+# Suppress verbose transformers warnings about logits processors
+logging.getLogger("transformers").setLevel(logging.ERROR)
+
 MODELS_FOLDER_NAME = "audiodit"
 
 
