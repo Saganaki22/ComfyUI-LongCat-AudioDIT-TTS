@@ -59,6 +59,7 @@ def offload_model_to_cpu() -> None:
         if getattr(_cached_model, "_vbar_active", False) or getattr(
             _cached_model, "_aimdo_auto", False
         ):
+            _offloaded = True  # Mark as offloaded so subsequent calls are silent
             mode = "VBAR" if getattr(_cached_model, "_vbar_active", False) else "aimdo auto"
             logger.info(f"{mode} active — skipping manual CPU offload")
             return

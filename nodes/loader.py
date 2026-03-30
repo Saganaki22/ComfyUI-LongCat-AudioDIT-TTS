@@ -356,19 +356,31 @@ def _patch_sdpa(model):
 def _patch_flash_attention(model):
     import torch.nn.functional as F
 
-    # Check if flash attention is actually available
+    # Try to import flash_attn package directly (more reliable than SDPA backend)
     try:
-        from torch.nn.attention import SDPBackend, sdpa_kernel
-        _has_sdpa_kernel = True
+        from flash_attn import flash_attn_func
+        _has_flash_attn = True
+        logger.info("Using flash_attn package directly for FlashAttention.")
     except ImportError:
-        logger.warning(
-            "FlashAttention requested but torch.nn.attention.sdpa_kernel not available "
-            "(requires PyTorch 2.0+). Falling back to default SDPA."
-        )
-        _patch_sdpa(model)
-        return
+        _has_flash_attn = False
+        # Fall back to SDPA with FlashAttention backend
+        try:
+            from torch.nn.attention import SDPBackend, sdpa_kernel
+            _has_sdpa_kernel = True
+            logger.info("Using SDPA with FlashAttention backend preference.")
+        except ImportError:
+            logger.warning(
+                "FlashAttention requested but neither flash_attn package nor "
+                "torch.nn.attention.sdpa_kernel available. Falling back to default SDPA."
+            )
+            _patch_sdpa(model)
+            return
+
+    # Track if we've already warned about FlashAttention fallback
+    _flash_fallback_warned = False
 
     def _self_attn_forward(self, x, mask=None, rope=None):
+        nonlocal _flash_fallback_warned
         batch_size = x.shape[0]
         query = self.to_q(x)
         key = self.to_k(x)
@@ -385,18 +397,46 @@ def _patch_flash_attention(model):
 
             query = _apply_rotary_emb(query, rope)
             key = _apply_rotary_emb(key, rope)
-        attn_mask = None
+
+        # FlashAttention from flash_attn package doesn't support attention masks
+        # Fall back to SDPA if mask is provided
         if mask is not None:
             attn_mask = (
                 mask.unsqueeze(1)
                 .unsqueeze(1)
                 .expand(batch_size, self.heads, query.shape[-2], key.shape[-2])
             )
-        # Force FlashAttention backend via sdpa_kernel context manager
-        with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
             x = F.scaled_dot_product_attention(
                 query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
             )
+        elif _has_flash_attn:
+            # Use flash_attn package directly - expects (batch, seqlen, nheads, headdim)
+            q = query.transpose(1, 2)  # (batch, seqlen, nheads, headdim)
+            k = key.transpose(1, 2)
+            v = value.transpose(1, 2)
+            x = flash_attn_func(q, k, v, dropout_p=0.0, causal=False)
+            x = x.transpose(1, 2)  # Back to (batch, nheads, seqlen, headdim)
+        else:
+            # Use SDPA with FlashAttention preference
+            try:
+                with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+                    x = F.scaled_dot_product_attention(
+                        query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
+                    )
+            except RuntimeError as e:
+                if "No available kernel" in str(e):
+                    if not _flash_fallback_warned:
+                        logger.warning(
+                            "FlashAttention not available in this PyTorch build. "
+                            "Falling back to default SDPA."
+                        )
+                        _flash_fallback_warned = True
+                    x = F.scaled_dot_product_attention(
+                        query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False
+                    )
+                else:
+                    raise
+
         x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
         x = self.to_out[0](x)
         x = self.to_out[1](x)
@@ -405,6 +445,7 @@ def _patch_flash_attention(model):
     def _cross_attn_forward(
         self, x, cond, mask=None, cond_mask=None, rope=None, cond_rope=None
     ):
+        nonlocal _flash_fallback_warned
         from audiodit.modeling_audiodit import _apply_rotary_emb
 
         batch_size = x.shape[0]
@@ -422,6 +463,8 @@ def _patch_flash_attention(model):
             query = _apply_rotary_emb(query, rope)
         if cond_rope is not None:
             key = _apply_rotary_emb(key, cond_rope)
+
+        # Cross-attention often has masks, use SDPA for compatibility
         attn_mask = None
         if mask is not None:
             attn_mask = (
@@ -430,11 +473,35 @@ def _patch_flash_attention(model):
             attn_mask = attn_mask.expand(
                 batch_size, self.heads, query.shape[-2], key.shape[-2]
             )
-        # Force FlashAttention backend via sdpa_kernel context manager
-        with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
-            x = F.scaled_dot_product_attention(
-                query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
-            )
+
+        if attn_mask is not None or not _has_flash_attn:
+            # Use SDPA when we have masks or no flash_attn package
+            try:
+                with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+                    x = F.scaled_dot_product_attention(
+                        query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+                    )
+            except RuntimeError as e:
+                if "No available kernel" in str(e):
+                    if not _flash_fallback_warned:
+                        logger.warning(
+                            "FlashAttention not available in this PyTorch build. "
+                            "Falling back to default SDPA."
+                        )
+                        _flash_fallback_warned = True
+                    x = F.scaled_dot_product_attention(
+                        query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+                    )
+                else:
+                    raise
+        else:
+            # Use flash_attn package directly
+            q = query.transpose(1, 2)
+            k = key.transpose(1, 2)
+            v = value.transpose(1, 2)
+            x = flash_attn_func(q, k, v, dropout_p=0.0, causal=False)
+            x = x.transpose(1, 2)
+
         x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
         x = self.to_out[0](x)
         x = self.to_out[1](x)
@@ -451,7 +518,7 @@ def _patch_flash_attention(model):
         elif isinstance(module, AudioDiTCrossAttention):
             module.forward = types.MethodType(_cross_attn_forward, module)
             patched += 1
-    logger.info(f"Patched {patched} attention modules with FlashAttention (forced via sdpa_kernel).")
+    logger.info(f"Patched {patched} attention modules with FlashAttention.")
 
 
 def _patch_sage_attention(model):
