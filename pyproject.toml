@@ -1,7 +1,7 @@
 [project]
 name = "ComfyUI-LongCat-AudioDIT-TTS"
 description = "ComfyUI custom nodes for LongCat-AudioDiT TTS | zero-shot and voice cloning diffusion TTS"
-version = "0.1.1"
+version = "0.1.2"
 license = {text = "MIT"}
 dependencies = [
     "numpy",
