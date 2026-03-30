@@ -566,15 +566,28 @@ def load_model(model_name: str, device: str, precision: str, attention: str):
 
     model.eval()
 
-    # Load tokenizer — try local_files_only first (works offline after first download)
-    # then fall back to online if not cached yet
+    # Load tokenizer — force offline mode to prevent HTTP requests after first download
+    import os
+    _prev_offline = os.environ.get("HF_HUB_OFFLINE", None)
     try:
+        os.environ["HF_HUB_OFFLINE"] = "1"
         tokenizer = AutoTokenizer.from_pretrained(
             model.config.text_encoder_model, local_files_only=True
         )
     except Exception:
+        # Not cached yet — allow online download this one time
+        if _prev_offline is not None:
+            os.environ["HF_HUB_OFFLINE"] = _prev_offline
+        else:
+            os.environ.pop("HF_HUB_OFFLINE", None)
         tokenizer = AutoTokenizer.from_pretrained(model.config.text_encoder_model)
         logger.info("Tokenizer downloaded from HuggingFace (cached for future offline use)")
+    finally:
+        # Restore original environment
+        if _prev_offline is not None:
+            os.environ["HF_HUB_OFFLINE"] = _prev_offline
+        else:
+            os.environ.pop("HF_HUB_OFFLINE", None)
 
     if attention != "auto":
         patch_attention(model, attention, device_str)
