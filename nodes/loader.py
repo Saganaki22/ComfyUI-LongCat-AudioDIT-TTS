@@ -36,6 +36,11 @@ def _register_folder():
 
 
 HF_MODELS = {
+    "LongCat-AudioDiT-1B": {
+        "repo_id": "meituan-longcat/LongCat-AudioDiT-1B",
+        "url": "https://huggingface.co/meituan-longcat/LongCat-AudioDiT-1B",
+        "description": "1B params (FP32 ~6GB)",
+    },
     "LongCat-AudioDiT-3.5B": {
         "repo_id": "meituan-longcat/LongCat-AudioDiT-3.5B",
         "url": "https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B",

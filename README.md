@@ -10,7 +10,7 @@
     <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(BF16)-orange' alt="HF Model BF16"></a>
     <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(FP8)-purple' alt="HF Model FP8"></a>
     <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-    <img src="https://img.shields.io/badge/version-0.1.3-blue" alt="Version">
+    <img src="https://img.shields.io/badge/version-0.1.4-blue" alt="Version">
   </p>
 </div>
 
@@ -36,7 +36,7 @@ This ComfyUI wrapper provides native node-based integration with:
 - **Zero-Shot Voice Cloning** — Clone any voice from a short reference audio clip
 - **Multi-Speaker TTS** — Generate conversations with multiple cloned voices using `[speaker_N]:` tags
 - **Diffusion-Based Generation** — DiT transformer with ODE Euler solver for high-quality audio
-- **FP8 / FP16 / BF16 / FP32 Support** — FP8 models are auto-dequantized to BF16; FP16 runs the transformer in fp16 with fp32 ODE accumulation
+- **FP8 / FP16 / BF16 / FP32 Support** — FP8 models are auto-dequantized to BF16; FP16 works for TTS only (voice cloning requires BF16)
 - **Native ComfyUI Integration** — AUDIO noodle inputs, progress bars, interruption support
 - **Smart Auto-Download** — Model weights auto-downloaded from HuggingFace on first use
 - **Smart Caching** — Optional model caching with CPU offload between runs
@@ -59,11 +59,13 @@ This ComfyUI wrapper provides native node-based integration with:
 
 | Model | VRAM | Description |
 |-------|------|-------------|
+| **LongCat-AudioDiT-1B** | ~6-8GB | 1B params (FP32) — smallest model, lower VRAM |
 | **LongCat-AudioDiT-3.5B-bf16** | ~10-14GB | BF16 quantized (recommended) — best balance of quality and VRAM |
 | **LongCat-AudioDiT-3.5B-fp8** | ~8-12GB | FP8 quantized — smallest download, dequantized to BF16 at load time |
 | **LongCat-AudioDiT-3.5B** | ~20GB | FP32 original — highest quality, requires more VRAM |
 
 Models are auto-downloaded from HuggingFace on first use:
+- [meituan-longcat/LongCat-AudioDiT-1B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-1B) — 1B params model
 - [meituan-longcat/LongCat-AudioDiT-3.5B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B) — original FP32 model
 - [drbaph/LongCat-AudioDiT-3.5B-bf16](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16) — BF16 quantized
 - [drbaph/LongCat-AudioDiT-3.5B-fp8](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8) — FP8 quantized
@@ -204,6 +206,8 @@ Multi-speaker conversation synthesis with dynamic speaker inputs (ComfyUI v3) or
 
 > **Note on precision:** FP16 runs the transformer in float16 while keeping the text encoder in BF16 (UMT5 layer_norm overflows in fp16) and accumulating ODE steps in fp32. FP8 models are dequantized to BF16 during loading. For best results, use `auto` or `bf16`.
 
+> ⚠️ **FP16 does NOT support voice cloning:** Voice Clone TTS and Multi-Speaker TTS nodes automatically upgrade FP16 to BF16. This is required because the latent conditioning path (encoding the reference audio) causes numerical overflow in FP16, resulting in NaN values that cascade through the ODE solver and produce silent output. Basic TTS works with FP16 because it uses zero latents for conditioning. If you select FP16 for voice cloning, you'll see a warning and the node will automatically use BF16 instead.
+
 ---
 
 ## File Structure
@@ -247,6 +251,9 @@ Manually download from HuggingFace:
 ```bash
 pip install -U huggingface_hub
 
+# 1B model (smallest)
+huggingface-cli download meituan-longcat/LongCat-AudioDiT-1B --local-dir ComfyUI/models/audiodit/LongCat-AudioDiT-1B
+
 # BF16 model (recommended)
 huggingface-cli download drbaph/LongCat-AudioDiT-3.5B-bf16 --local-dir ComfyUI/models/audiodit/LongCat-AudioDiT-3.5B-bf16
 
@@ -267,7 +274,9 @@ pip install -r requirements.txt
 
 ### FP16 / FP8 Produces Silent Output?
 
-FP8 models are dequantized to BF16 during loading — the 598 FP8 tensors are converted using per-tensor scales from `fp8_scales.json`. FP16 dtype runs the transformer in float16 with fp32 ODE accumulation. Both should produce clean audio. If you hear buzzing, ensure you're using the latest version of this node pack.
+FP8 models are dequantized to BF16 during loading — the 598 FP8 tensors are converted using per-tensor scales from `fp8_scales.json`. FP16 works correctly for basic TTS with fp32 ODE accumulation.
+
+**Important:** FP16 is **not supported** for Voice Clone TTS and Multi-Speaker TTS. These nodes automatically upgrade FP16 to BF16 because the latent conditioning from reference audio causes numerical overflow in FP16, leading to NaN propagation and silent output. You will see a warning message if you select FP16 for these nodes.
 
 ### Out of Memory?
 
@@ -308,6 +317,7 @@ sf.write("reference_normalized.wav", audio, sr)
 ## Links
 
 ### HuggingFace
+- **1B Model:** [meituan-longcat/LongCat-AudioDiT-1B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-1B)
 - **Original Model (FP32):** [meituan-longcat/LongCat-AudioDiT-3.5B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B)
 - **BF16 Model:** [drbaph/LongCat-AudioDiT-3.5B-bf16](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16)
 - **FP8 Model:** [drbaph/LongCat-AudioDiT-3.5B-fp8](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8)

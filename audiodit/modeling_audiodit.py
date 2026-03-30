@@ -1328,19 +1328,25 @@ class AudioDiTModel(AudioDiTPreTrainedModel):
         # Detect transformer dtype for mixed-precision ODE solving
         _tr_dtype = next(self.transformer.parameters()).dtype
 
+        # Pre-cast text embeddings and latent_cond to transformer dtype (avoids per-step casting)
+        _text_cond = text_condition.to(_tr_dtype) if _tr_dtype != torch.float32 else text_condition
+        _neg_text = neg_text.to(_tr_dtype) if _tr_dtype != torch.float32 else neg_text
+        _latent_cond = latent_cond.to(_tr_dtype) if _tr_dtype != torch.float32 else latent_cond
+        _empty_latent_cond = empty_latent_cond.to(_tr_dtype) if _tr_dtype != torch.float32 else empty_latent_cond
+
         def fn(t, x):
             x[:, :latent_len] = prompt_noise * (1 - t) + latent_cond[:, :latent_len] * t
             # Cast x to transformer dtype for computation
             x_in = x.to(_tr_dtype) if _tr_dtype != x.dtype else x
             output = self.transformer(
                 x=x_in,
-                text=text_condition,
+                text=_text_cond,
                 text_len=text_condition_len,
                 time=t.to(_tr_dtype) if _tr_dtype != torch.float32 else t,
                 mask=mask,
                 cond_mask=text_mask,
                 return_ith_layer=repa_layer,
-                latent_cond=latent_cond.to(_tr_dtype) if _tr_dtype != torch.float32 else latent_cond,
+                latent_cond=_latent_cond,
             )
             pred = output["last_hidden_state"].float()  # accumulate ODE in fp32
 
@@ -1351,15 +1357,20 @@ class AudioDiTModel(AudioDiTPreTrainedModel):
             x_in_null = x.to(_tr_dtype) if _tr_dtype != x.dtype else x
             null_output = self.transformer(
                 x=x_in_null,
-                text=neg_text,
+                text=_neg_text,
                 text_len=neg_text_len,
                 time=t.to(_tr_dtype) if _tr_dtype != torch.float32 else t,
                 mask=mask,
                 cond_mask=text_mask,
                 return_ith_layer=repa_layer,
-                latent_cond=empty_latent_cond.to(_tr_dtype) if _tr_dtype != torch.float32 else empty_latent_cond,
+                latent_cond=_empty_latent_cond,
             )
             null_pred = null_output["last_hidden_state"].float()
+
+            # Guard against NaN in null prediction too
+            if torch.isnan(null_pred).any() or torch.isinf(null_pred).any():
+                logger.warning(f"NaN/Inf in null_pred at t={t.item():.3f}, replacing with zeros")
+                null_pred = torch.where(torch.isnan(null_pred) | torch.isinf(null_pred), torch.zeros_like(null_pred), null_pred)
 
             if guidance_method == "cfg":
                 return pred + (pred - null_pred) * cfg_strength

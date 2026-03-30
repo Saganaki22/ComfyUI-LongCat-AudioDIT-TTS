@@ -325,6 +325,14 @@ class LongCatVoiceCloneTTS:
         attention,
         keep_loaded=False,
     ):
+        # Voice clone requires bf16 minimum - fp16 causes NaN in latent conditioning path
+        if dtype == "fp16":
+            logger.warning(
+                "FP16 is not supported for voice cloning - the latent conditioning path "
+                "causes numerical instability. Automatically upgrading to BF16."
+            )
+            dtype = "bf16"
+
         model_name = _strip_auto_download_suffix(model_path)
         key = get_cache_key(model_path, device, dtype, attention)
         cached_model, cached_tokenizer, cached_key = get_cached_model()
