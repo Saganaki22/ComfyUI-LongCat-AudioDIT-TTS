@@ -1,0 +1,22 @@
+[project]
+name = "ComfyUI-LongCat-AudioDIT-TTS"
+description = "ComfyUI custom nodes for LongCat-AudioDiT TTS | zero-shot and voice cloning diffusion TTS"
+version = "0.1.1"
+license = {text = "MIT"}
+dependencies = [
+    "numpy",
+    "soundfile",
+    "transformers",
+    "einops",
+    "librosa",
+    "safetensors",
+    "huggingface-hub",
+]
+
+[project.urls]
+Repository = "https://github.com/Saganaki22/ComfyUI-LongCat-AudioDIT-TTS"
+
+[tool.comfy]
+PublisherId = "saganaki22"
+DisplayName = "LongCat AudioDiT TTS"
+Icon = "https://avatars.githubusercontent.com/u/84208527"

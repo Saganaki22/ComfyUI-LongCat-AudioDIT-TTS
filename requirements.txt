@@ -1,0 +1,7 @@
+numpy
+soundfile
+transformers>=4.45.2
+einops>=0.7.0
+librosa>=0.10.1
+safetensors>=0.4.0
+huggingface-hub

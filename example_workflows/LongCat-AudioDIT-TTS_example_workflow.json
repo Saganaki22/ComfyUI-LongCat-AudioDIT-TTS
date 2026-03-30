@@ -1,0 +1,1055 @@
+{
+  "id": "bc26de4b-dc70-44b2-bc34-5a114a6637bd",
+  "revision": 0,
+  "last_node_id": 25,
+  "last_link_id": 33,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "PreviewAudio",
+      "pos": [
+        -1161.2936449376364,
+        1056.823421755245
+      ],
+      "size": [
+        393.61588589855955,
+        88
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 12
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "PreviewAudio"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 1,
+      "type": "LongCatTTS",
+      "pos": [
+        -1167.0653537571038,
+        573.3708420604073
+      ],
+      "size": [
+        400,
+        436.90625
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LongCatTTS"
+      },
+      "widgets_values": [
+        "LongCat-AudioDiT-3.5B-bf16",
+        "Hello! This is your Longcat Audio node speaking, everything is set-up and running smoothly!\n",
+        40,
+        4,
+        "cfg",
+        "auto",
+        "fp16",
+        "auto",
+        1614790404,
+        "randomize",
+        false
+      ]
+    },
+    {
+      "id": 8,
+      "type": "Audio To Text (mtb)",
+      "pos": [
+        -694.3549807832977,
+        1011.6778024663134
+      ],
+      "size": [
+        270,
+        102
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "pipeline",
+          "type": "WHISPER_PIPELINE",
+          "link": 8
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            14
+          ]
+        },
+        {
+          "name": "WHISPER_OUTPUT",
+          "type": "WHISPER_OUTPUT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-mtb",
+        "ver": "0.5.4",
+        "Node name for S&R": "Audio To Text (mtb)"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ]
+    },
+    {
+      "id": 7,
+      "type": "Load Whisper (mtb)",
+      "pos": [
+        -699.2245144833466,
+        884.7683190635346
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pipeline",
+          "type": "WHISPER_PIPELINE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-mtb",
+        "ver": "0.5.4",
+        "Node name for S&R": "Load Whisper (mtb)"
+      },
+      "widgets_values": [
+        "large-v3",
+        false
+      ]
+    },
+    {
+      "id": 5,
+      "type": "NormalizeAudioLoudness",
+      "pos": [
+        -649.4221479037329,
+        640.51042465
+      ],
+      "size": [
+        277.4703125,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 12,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-WanVideoWrapper",
+        "ver": "df8f3e49daaad117cf3090cc916c83f3d001494c",
+        "Node name for S&R": "NormalizeAudioLoudness"
+      },
+      "widgets_values": [
+        -23
+      ]
+    },
+    {
+      "id": 11,
+      "type": "Reroute",
+      "pos": [
+        -427.1586682275065,
+        806.3215284381424
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 15,
+      "type": "Load Whisper (mtb)",
+      "pos": [
+        -1023.595674829351,
+        1769.7668656953133
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 2,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "pipeline",
+          "type": "WHISPER_PIPELINE",
+          "links": [
+            19,
+            31
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-mtb",
+        "ver": "0.5.4",
+        "Node name for S&R": "Load Whisper (mtb)"
+      },
+      "widgets_values": [
+        "large-v3",
+        false
+      ]
+    },
+    {
+      "id": 16,
+      "type": "Audio To Text (mtb)",
+      "pos": [
+        -801.1034521198155,
+        1651.4567300016033
+      ],
+      "size": [
+        270,
+        102
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "pipeline",
+          "type": "WHISPER_PIPELINE",
+          "link": 19
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            32
+          ]
+        },
+        {
+          "name": "WHISPER_OUTPUT",
+          "type": "WHISPER_OUTPUT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-mtb",
+        "ver": "0.5.4",
+        "Node name for S&R": "Audio To Text (mtb)"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ]
+    },
+    {
+      "id": 19,
+      "type": "Audio To Text (mtb)",
+      "pos": [
+        -799.3401875784148,
+        1795.4856673989896
+      ],
+      "size": [
+        270,
+        102
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "pipeline",
+          "type": "WHISPER_PIPELINE",
+          "link": 31
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            33
+          ]
+        },
+        {
+          "name": "WHISPER_OUTPUT",
+          "type": "WHISPER_OUTPUT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-mtb",
+        "ver": "0.5.4",
+        "Node name for S&R": "Audio To Text (mtb)"
+      },
+      "widgets_values": [
+        "auto",
+        false
+      ]
+    },
+    {
+      "id": 12,
+      "type": "LoadAudio",
+      "pos": [
+        -1056.8997565970044,
+        1248.2953516206571
+      ],
+      "size": [
+        301.97234149018595,
+        136
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            20,
+            27
+          ]
+        }
+      ],
+      "title": "Speaker_1",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "sample-1.mp3",
+        null,
+        null
+      ]
+    },
+    {
+      "id": 13,
+      "type": "LoadAudio",
+      "pos": [
+        -1057.65877505409,
+        1435.5552386670881
+      ],
+      "size": [
+        301.97234149018595,
+        136
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            24,
+            29
+          ]
+        }
+      ],
+      "title": "Speaker_2",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "sample-2.mp3",
+        null,
+        null
+      ]
+    },
+    {
+      "id": 14,
+      "type": "SaveAudioMP3",
+      "pos": [
+        2.5290703115303454,
+        1254.6969756483898
+      ],
+      "size": [
+        270,
+        136
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 18
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "SaveAudioMP3"
+      },
+      "widgets_values": [
+        "audio/ComfyUI",
+        "V0"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "Reroute",
+      "pos": [
+        -499.43283971807006,
+        1743.474773173032
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 32
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 24,
+      "type": "Reroute",
+      "pos": [
+        -499.0187447788722,
+        1778.3081159343078
+      ],
+      "size": [
+        75,
+        26
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "",
+          "type": "*",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "showOutputText": false,
+        "horizontal": false
+      }
+    },
+    {
+      "id": 4,
+      "type": "LoadAudio",
+      "pos": [
+        -704.3784875547642,
+        616.6128451418922
+      ],
+      "size": [
+        301.97234149018595,
+        136
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            4,
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "sample-1.mp3",
+        null,
+        null
+      ]
+    },
+    {
+      "id": 9,
+      "type": "SaveAudioMP3",
+      "pos": [
+        101.61320722907361,
+        632.883691457918
+      ],
+      "size": [
+        270,
+        136
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.17.0",
+        "Node name for S&R": "SaveAudioMP3"
+      },
+      "widgets_values": [
+        "audio/ComfyUI",
+        "V0"
+      ]
+    },
+    {
+      "id": 21,
+      "type": "NormalizeAudioLoudness",
+      "pos": [
+        -694.7270212266317,
+        1276.622595508591
+      ],
+      "size": [
+        277.4703125,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-WanVideoWrapper",
+        "ver": "df8f3e49daaad117cf3090cc916c83f3d001494c",
+        "Node name for S&R": "NormalizeAudioLoudness"
+      },
+      "widgets_values": [
+        -23
+      ]
+    },
+    {
+      "id": 22,
+      "type": "NormalizeAudioLoudness",
+      "pos": [
+        -689.687378392029,
+        1325.8727846627187
+      ],
+      "size": [
+        277.4703125,
+        58
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI-WanVideoWrapper",
+        "ver": "df8f3e49daaad117cf3090cc916c83f3d001494c",
+        "Node name for S&R": "NormalizeAudioLoudness"
+      },
+      "widgets_values": [
+        -23
+      ]
+    },
+    {
+      "id": 10,
+      "type": "LongCatMultiSpeakerTTS",
+      "pos": [
+        -407.2727783783888,
+        1252.9326946291585
+      ],
+      "size": [
+        362.2566973876951,
+        444
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "speaker_1_audio",
+          "name": "num_speakers.speaker_1_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 28
+        },
+        {
+          "label": "speaker_2_audio",
+          "name": "num_speakers.speaker_2_audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LongCatMultiSpeakerTTS"
+      },
+      "widgets_values": [
+        "LongCat-AudioDiT-3.5B-bf16",
+        "[speaker_1]: Hello, I'm speaker one.\n[speaker_2]: And I'm speaker two!",
+        16,
+        4,
+        "apg",
+        "auto",
+        "auto",
+        "auto",
+        1071507970,
+        "randomize",
+        false,
+        0.4,
+        "2",
+        "Want to level up your Python skills? Remember to use descriptive variable names, keep functions short, and test your code regularly. Good coding practices make debugging a breeze.",
+        "It's not about what we have or what we achieve, but about how we experience each moment. This is the most profound secret of life."
+      ]
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        -1746.8458811185124,
+        531.6368565419994
+      ],
+      "size": [
+        523.6196232617006,
+        1080.1800744230377
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# LongCat AudioDiT TTS\n\n  ## Auto-Download\n\n  **Models auto-download on first run** - no manual setup needed!\n\n  | Model | VRAM | Download Size |\n  |-------|------|---------------|\n  | LongCat-AudioDiT-3.5B-bf16 (recommended) | ~12GB | ~7GB |\n  | LongCat-AudioDiT-3.5B-fp8 | ~8-12GB | ~4GB |\n  | LongCat-AudioDiT-3.5B (fp32) | ~20GB | ~14GB |\n  ---\n\n  ## Manual Download\n\n  | File | Size | Link |\n  |------|------|------|\n  | LongCat-AudioDiT-3.5B-bf16 | ~7GB | [Download](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16) |\n  | LongCat-AudioDiT-3.5B-fp8 | ~4GB | [Download](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8) |\n  | LongCat-AudioDiT-3.5B (fp32) | ~14GB | [Download](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B) |\n\n  Place in `ComfyUI/models/audiodit/` as folder names: `LongCat-AudioDiT-3.5B-bf16`, `LongCat-AudioDiT-3.5B-fp8`, or `LongCat-AudioDiT-3.5B`\n\n  ---\n\n  ## FP8 model is dequantized to BF16 at load time using per-tensor scales from fp8_scales.json\n\n  ---\n\n  ## Nodes\n\n  | Node | Description |\n  |------|-------------|\n  | **LongCat AudioDiT TTS** | Basic text-to-speech synthesis |\n  | **LongCat AudioDiT Voice Clone TTS** | Clone voice from 3-15s reference audio |\n  | **LongCat AudioDiT Multi-Speaker TTS** | Multi-speaker dialogue with [speaker_N]: tags |\n\n  ---\n\n  ## Parameters\n\n  | Parameter | Default | Description |\n  |-----------|---------|-------------|\n  | steps | 16 | ODE Euler solver steps (4-64) |\n  | guidance_strength | 4.0 | CFG/APG guidance scale (0-10) |\n  | guidance_method | cfg / apg | cfg for TTS, apg for voice cloning |\n  | dtype | auto | auto, bf16, fp16, fp32 |\n  | attention | auto | auto, sdpa, sage_attention, flash_attention |\n  | keep_model_loaded | true | Cache model + auto-offload to CPU between runs |\n\n  ---\n\n  ## Voice Cloning\n\n  Connect reference audio (3-15 seconds recommended) to `prompt_audio` input. Providing `prompt_text` (transcript) improves quality significantly.\n\n  ---\n\n  ## Multi-Speaker\n\n  Use `[speaker_N]:` tags in text:\n  [speaker_1]: Hello, welcome to the show!\n  [speaker_2]: Thanks for having me!\n  [speaker_1]: Let's get started.\n\n  ---\n\n  ## Links\n\n  - Original [LongCat-AudioDiT](https://github.com/meituan-longcat/LongCat-AudioDiT)\n  - Models [3.5B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B) / [3.5B-bf16](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16) / [3.5B-fp8](https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8)\n  - Issues [Report Bug](https://github.com/Saganaki22/ComfyUI-LongCat-AudioDIT-TTS/issues)"
+      ],
+      "color": "#c09430",
+      "bgcolor": "rgba(24,24,27,.9)"
+    },
+    {
+      "id": 3,
+      "type": "LongCatVoiceCloneTTS",
+      "pos": [
+        -343.7295023669453,
+        615.9824340567731
+      ],
+      "size": [
+        419.203125,
+        504.90625
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt_audio",
+          "type": "AUDIO",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LongCatVoiceCloneTTS"
+      },
+      "widgets_values": [
+        "LongCat-AudioDiT-3.5B-bf16",
+        "The sun is shining brightly in the clear blue sky, the gentle breeze is blowing and birds are singing sweet melodies, the world is full of beauty and wonder waiting to be explored",
+        "Want to level up your Python skills? Remember to use descriptive variable names, keep functions short, and test your code regularly. Good coding practices make debugging a breeze.",
+        25,
+        4,
+        "apg",
+        "auto",
+        "auto",
+        "sage_attention",
+        496492878,
+        "randomize",
+        true
+      ]
+    }
+  ],
+  "links": [
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "AUDIO"
+    ],
+    [
+      5,
+      5,
+      0,
+      3,
+      0,
+      "AUDIO"
+    ],
+    [
+      8,
+      7,
+      0,
+      8,
+      0,
+      "WHISPER_PIPELINE"
+    ],
+    [
+      10,
+      4,
+      0,
+      8,
+      1,
+      "AUDIO"
+    ],
+    [
+      11,
+      3,
+      0,
+      9,
+      0,
+      "AUDIO"
+    ],
+    [
+      12,
+      1,
+      0,
+      2,
+      0,
+      "AUDIO"
+    ],
+    [
+      14,
+      8,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      18,
+      10,
+      0,
+      14,
+      0,
+      "AUDIO"
+    ],
+    [
+      19,
+      15,
+      0,
+      16,
+      0,
+      "WHISPER_PIPELINE"
+    ],
+    [
+      20,
+      12,
+      0,
+      16,
+      1,
+      "AUDIO"
+    ],
+    [
+      24,
+      13,
+      0,
+      19,
+      1,
+      "AUDIO"
+    ],
+    [
+      27,
+      12,
+      0,
+      21,
+      0,
+      "AUDIO"
+    ],
+    [
+      28,
+      21,
+      0,
+      10,
+      0,
+      "AUDIO"
+    ],
+    [
+      29,
+      13,
+      0,
+      22,
+      0,
+      "AUDIO"
+    ],
+    [
+      30,
+      22,
+      0,
+      10,
+      1,
+      "AUDIO"
+    ],
+    [
+      31,
+      15,
+      0,
+      19,
+      0,
+      "WHISPER_PIPELINE"
+    ],
+    [
+      32,
+      16,
+      0,
+      23,
+      0,
+      "STRING"
+    ],
+    [
+      33,
+      19,
+      0,
+      24,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 2,
+      "title": "Voice Clone",
+      "bounding": [
+        -738.5363719598535,
+        530.9341946907165,
+        1137.029584071739,
+        621.2979621100772
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 1,
+      "title": "(Optional) Transcription",
+      "bounding": [
+        -714.4127846462881,
+        810.6161412091642,
+        323.46280518161734,
+        317.44821787515536
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "TTS",
+      "bounding": [
+        -1177.0653537571038,
+        499.7708420604071,
+        420,
+        655.0525796948383
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Multi-Speaker",
+      "bounding": [
+        -1069.5643256445653,
+        1174.6953516206574,
+        1352.093395956097,
+        775.7404719135342
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "(Optional) Transcription",
+      "bounding": [
+        -1056.6603699560883,
+        1582.9651925113842,
+        555.2065813048812,
+        335.2066014817924
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6830134553650705,
+      "offset": [
+        2110.4472540240054,
+        -244.61919846677125
+      ]
+    },
+    "frontendVersion": "1.42.8",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
