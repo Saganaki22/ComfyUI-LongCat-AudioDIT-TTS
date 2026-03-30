@@ -35,6 +35,11 @@ def set_cached_model(model: Any, tokenizer: Any, key: tuple, keep_loaded: bool =
     _offloaded = False
 
 
+def set_keep_loaded(keep_loaded: bool):
+    global _keep_loaded
+    _keep_loaded = keep_loaded
+
+
 def is_offloaded() -> bool:
     return _offloaded
 
@@ -126,8 +131,11 @@ def _hook_comfy_model_management():
         _original = mm.soft_empty_cache
 
         def _patched_soft_empty_cache(*args, **kwargs):
-            # Always unload when user explicitly clicks "Free model" in ComfyUI
-            unload_model()
+            # Only offload to CPU if keep_model_loaded is True, otherwise full unload
+            if _keep_loaded and _cached_model is not None:
+                offload_model_to_cpu()
+            else:
+                unload_model()
             return _original(*args, **kwargs)
 
         mm.soft_empty_cache = _patched_soft_empty_cache

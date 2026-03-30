@@ -23,6 +23,7 @@ from .model_cache import (
     offload_model_to_cpu,
     resume_model_to_cuda,
     set_cached_model,
+    set_keep_loaded,
     unload_model,
 )
 
@@ -346,6 +347,7 @@ class LongCatVoiceCloneTTS:
             unload_model()
 
         if cached_model is not None and cached_key == key:
+            set_keep_loaded(keep_loaded)  # Update keep_loaded flag for cached model
             if is_offloaded():
                 device_str, _ = resolve_device(device)
                 logger.info(f"Resuming offloaded model to {device_str}...")
