@@ -285,6 +285,22 @@ Clicking "Free model and node cache" in ComfyUI always fully unloads the model r
 - The VAE audio decoder is always kept in BF16 on CUDA for audio quality
 - FP16 and FP8 are supported but `bf16` or `auto` gives the most consistent results
 
+### Poor Voice Cloning Quality?
+
+If your reference audio is too loud (clipping) or has inconsistent volume, the voice clone quality will suffer. Normalize your reference audio to -3dB to -6dB peak before using it:
+
+```python
+# Quick normalization script
+import librosa
+import soundfile as sf
+
+audio, sr = librosa.load("reference.wav", sr=24000, mono=True)
+peak = audio.max()
+target_peak = 0.5  # -6dB
+audio = audio * (target_peak / peak)
+sf.write("reference_normalized.wav", audio, sr)
+```
+
 </details>
 
 ---
