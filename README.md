@@ -59,9 +59,9 @@ This ComfyUI wrapper provides native node-based integration with:
 
 | Model | VRAM | Description |
 |-------|------|-------------|
-| **LongCat-AudioDiT-3.5B-bf16** | ~7GB | BF16 quantized (recommended) — best balance of quality and VRAM |
-| **LongCat-AudioDiT-3.5B-fp8** | ~4GB | FP8 quantized — smallest download, dequantized to BF16 at load time |
-| **LongCat-AudioDiT-3.5B** | ~14GB | FP32 original — highest quality, requires more VRAM |
+| **LongCat-AudioDiT-3.5B-bf16** | ~10-14GB | BF16 quantized (recommended) — best balance of quality and VRAM |
+| **LongCat-AudioDiT-3.5B-fp8** | ~8-12GB | FP8 quantized — smallest download, dequantized to BF16 at load time |
+| **LongCat-AudioDiT-3.5B** | ~20GB | FP32 original — highest quality, requires more VRAM |
 
 Models are auto-downloaded from HuggingFace on first use:
 - [meituan-longcat/LongCat-AudioDiT-3.5B](https://huggingface.co/meituan-longcat/LongCat-AudioDiT-3.5B) — original FP32 model
