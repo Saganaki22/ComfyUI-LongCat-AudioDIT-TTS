@@ -361,7 +361,12 @@ def _patch_flash_attention(model):
         from torch.nn.attention import SDPBackend, sdpa_kernel
         _has_sdpa_kernel = True
     except ImportError:
-        _has_sdpa_kernel = False
+        logger.warning(
+            "FlashAttention requested but torch.nn.attention.sdpa_kernel not available "
+            "(requires PyTorch 2.0+). Falling back to default SDPA."
+        )
+        _patch_sdpa(model)
+        return
 
     def _self_attn_forward(self, x, mask=None, rope=None):
         batch_size = x.shape[0]
@@ -387,10 +392,49 @@ def _patch_flash_attention(model):
                 .unsqueeze(1)
                 .expand(batch_size, self.heads, query.shape[-2], key.shape[-2])
             )
-        # Just use SDPA without forcing a specific kernel - let PyTorch pick the best
-        x = F.scaled_dot_product_attention(
-            query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
-        )
+        # Force FlashAttention backend via sdpa_kernel context manager
+        with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+            x = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+            )
+        x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
+        x = self.to_out[0](x)
+        x = self.to_out[1](x)
+        return x
+
+    def _cross_attn_forward(
+        self, x, cond, mask=None, cond_mask=None, rope=None, cond_rope=None
+    ):
+        from audiodit.modeling_audiodit import _apply_rotary_emb
+
+        batch_size = x.shape[0]
+        query = self.to_q(x)
+        key = self.to_k(cond)
+        value = self.to_v(cond)
+        if self.qk_norm:
+            query = self.q_norm(query)
+            key = self.k_norm(key)
+        head_dim = self.inner_dim // self.heads
+        query = query.view(batch_size, -1, self.heads, head_dim).transpose(1, 2)
+        key = key.view(batch_size, -1, self.heads, head_dim).transpose(1, 2)
+        value = value.view(batch_size, -1, self.heads, head_dim).transpose(1, 2)
+        if rope is not None:
+            query = _apply_rotary_emb(query, rope)
+        if cond_rope is not None:
+            key = _apply_rotary_emb(key, cond_rope)
+        attn_mask = None
+        if mask is not None:
+            attn_mask = (
+                cond_mask.unsqueeze(1).expand(-1, mask.shape[1], -1).unsqueeze(1)
+            )
+            attn_mask = attn_mask.expand(
+                batch_size, self.heads, query.shape[-2], key.shape[-2]
+            )
+        # Force FlashAttention backend via sdpa_kernel context manager
+        with sdpa_kernel(SDPBackend.FLASH_ATTENTION):
+            x = F.scaled_dot_product_attention(
+                query, key, value, attn_mask=attn_mask, dropout_p=0.0, is_causal=False
+            )
         x = x.transpose(1, 2).reshape(batch_size, -1, self.inner_dim).to(query.dtype)
         x = self.to_out[0](x)
         x = self.to_out[1](x)
@@ -399,10 +443,15 @@ def _patch_flash_attention(model):
     from audiodit.modeling_audiodit import AudioDiTSelfAttention, AudioDiTCrossAttention
     import types
 
+    patched = 0
     for module in model.modules():
         if isinstance(module, AudioDiTSelfAttention):
             module.forward = types.MethodType(_self_attn_forward, module)
-    logger.info("Patched self-attention modules (FlashAttention requested, using best available SDPA backend).")
+            patched += 1
+        elif isinstance(module, AudioDiTCrossAttention):
+            module.forward = types.MethodType(_cross_attn_forward, module)
+            patched += 1
+    logger.info(f"Patched {patched} attention modules with FlashAttention (forced via sdpa_kernel).")
 
 
 def _patch_sage_attention(model):
