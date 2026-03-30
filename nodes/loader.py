@@ -566,7 +566,15 @@ def load_model(model_name: str, device: str, precision: str, attention: str):
 
     model.eval()
 
-    tokenizer = AutoTokenizer.from_pretrained(model.config.text_encoder_model)
+    # Load tokenizer — try local_files_only first (works offline after first download)
+    # then fall back to online if not cached yet
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(
+            model.config.text_encoder_model, local_files_only=True
+        )
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(model.config.text_encoder_model)
+        logger.info("Tokenizer downloaded from HuggingFace (cached for future offline use)")
 
     if attention != "auto":
         patch_attention(model, attention, device_str)
