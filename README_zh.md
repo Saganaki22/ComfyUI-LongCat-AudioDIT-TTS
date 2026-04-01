@@ -10,7 +10,7 @@
     <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-bf16"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(BF16)-orange' alt="HF Model BF16"></a>
     <a href="https://huggingface.co/drbaph/LongCat-AudioDiT-3.5B-fp8"><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model_(FP8)-purple' alt="HF Model FP8"></a>
     <img src="https://img.shields.io/badge/License-MIT-green" alt="License">
-    <img src="https://img.shields.io/badge/version-0.1.7-blue" alt="Version">
+    <img src="https://img.shields.io/badge/version-0.1.8-blue" alt="Version">
   </p>
 </div>
 
@@ -28,6 +28,8 @@
 - **声音克隆** — 从参考音频克隆声音（建议 3-15 秒）
 - **多说话人对话合成** — 使用多个克隆声音生成对话
 - **24kHz 输出** — 广播级音质
+
+> ⚠️ **生成音频时长限制：** 模型支持生成最长 **60 秒** 的音频，但较长的输出可能会出现词语重复或漏词的问题。为获得最佳效果，建议将生成音频控制在 **15-30 秒** 范围内。（注：此处指的是*输出*音频时长，而非输入的参考音频时长。）
 
 ---
 

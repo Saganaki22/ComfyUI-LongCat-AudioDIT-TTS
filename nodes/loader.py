@@ -602,6 +602,53 @@ def _is_fp8_model(model_path: Path) -> bool:
     return (model_path / "fp8_scales.json").is_file()
 
 
+def _has_safetensors_metadata(model_path: Path) -> bool:
+    """Check if safetensors file has proper format metadata.
+
+    Original meituan-longcat models have safetensors without metadata,
+    which causes transformers.from_pretrained to fail.
+    """
+    from safetensors import safe_open
+
+    safetensors_path = model_path / "model.safetensors"
+    if not safetensors_path.exists():
+        return True  # No safetensors, let normal path handle it
+
+    try:
+        with safe_open(safetensors_path, framework="pt") as f:
+            metadata = f.metadata()
+            if metadata is None or metadata.get("format") is None:
+                return False
+            return True
+    except Exception:
+        return True  # If we can't check, assume it's fine
+
+
+def _load_model_direct(model_path: Path, model_class, torch_dtype):
+    """Load model by directly loading safetensors state dict.
+
+    Fallback for safetensors files without format metadata.
+    """
+    from safetensors.torch import load_file
+
+    # Load config
+    config = model_class.config_class.from_pretrained(str(model_path))
+
+    # Create model with config
+    model = model_class(config)
+
+    # Load state dict directly from safetensors
+    safetensors_path = model_path / "model.safetensors"
+    if safetensors_path.exists():
+        state_dict = load_file(str(safetensors_path))
+        model.load_state_dict(state_dict, strict=False)
+        logger.info(f"Loaded model directly from safetensors (no metadata)")
+    else:
+        raise FileNotFoundError(f"No model.safetensors found in {model_path}")
+
+    return model
+
+
 def load_model(model_name: str, device: str, precision: str, attention: str):
     model_name = _strip_auto_download_suffix(model_name)
     model_path = resolve_model_path(model_name)
@@ -625,13 +672,23 @@ def load_model(model_name: str, device: str, precision: str, attention: str):
     import transformers
     prev_verbosity = transformers.logging.get_verbosity()
     transformers.logging.set_verbosity_error()
+
+    # Check if safetensors has proper metadata (original meituan models don't)
+    has_metadata = _has_safetensors_metadata(model_path)
+
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        # torch_dtype=bfloat16 ensures fp8 tensors in safetensors are
-        # properly converted to bf16 during loading by transformers
-        model = AudioDiTModel.from_pretrained(
-            str(model_path), torch_dtype=torch.bfloat16,
-        )
+        if has_metadata:
+            # Normal loading path - safetensors has proper metadata
+            # torch_dtype=bfloat16 ensures fp8 tensors in safetensors are
+            # properly converted to bf16 during loading by transformers
+            model = AudioDiTModel.from_pretrained(
+                str(model_path), torch_dtype=torch.bfloat16,
+            )
+        else:
+            # Fallback for safetensors without metadata (original meituan models)
+            logger.info("Safetensors has no format metadata — using direct loading")
+            model = _load_model_direct(model_path, AudioDiTModel, torch.bfloat16)
     transformers.logging.set_verbosity(prev_verbosity)
 
     # Fix weight_norm params (weight_g/weight_v) that from_pretrained fails to load
