@@ -61,6 +61,61 @@ HF_MODELS = {
     },
 }
 HF_DEFAULT_MODEL_NAME = "LongCat-AudioDiT-3.5B-bf16"
+HF_TOKENIZER_ID = "google/umt5-base"
+_LOCAL_TOKENIZER_DIR = "umt5-base-tokenizer"
+
+
+def _get_tokenizer_path() -> Path:
+    """Return the local directory where the UMT5 tokenizer is cached."""
+    return _get_models_base() / _LOCAL_TOKENIZER_DIR
+
+
+def _ensure_tokenizer_downloaded(tokenizer_model_id: str) -> Path:
+    """Download the tokenizer to a persistent local directory if not already present.
+
+    Returns the local path from which the tokenizer can be loaded offline.
+    """
+    tok_path = _get_tokenizer_path()
+
+    # Check for a valid local tokenizer (at minimum tokenizer_config.json)
+    if tok_path.is_dir() and (tok_path / "tokenizer_config.json").is_file():
+        return tok_path
+
+    logger.info(
+        f"Downloading tokenizer '{tokenizer_model_id}' for offline use..."
+    )
+
+    try:
+        from huggingface_hub import snapshot_download
+    except ImportError:
+        logger.error(
+            "huggingface_hub is not installed — cannot auto-download tokenizer.\n"
+            "Install it with:  pip install huggingface_hub\n"
+            f"Then manually download from: https://huggingface.co/{tokenizer_model_id}"
+        )
+        # Fall back to online loading — will fail offline but works online
+        return tokenizer_model_id
+
+    try:
+        snapshot_download(
+            repo_id=tokenizer_model_id,
+            local_dir=str(tok_path),
+            # Only download tokenizer files, not model weights
+            allow_patterns=[
+                "tokenizer*.json",
+                "tokenizer_config.json",
+                "special_tokens_map.json",
+                "added_tokens.json",
+                "spiece.model",
+                "*.txt",
+            ],
+        )
+        logger.info(f"Tokenizer cached locally at: {tok_path}")
+        return tok_path
+    except Exception as e:
+        logger.error(f"Tokenizer download failed: {e}")
+        # Fall back to online loading
+        return tokenizer_model_id
 
 
 def _auto_download_model(model_name: str = HF_DEFAULT_MODEL_NAME) -> bool:
@@ -759,28 +814,11 @@ def load_model(model_name: str, device: str, precision: str, attention: str):
 
     model.eval()
 
-    # Load tokenizer — force offline mode to prevent HTTP requests after first download
-    import os
-    _prev_offline = os.environ.get("HF_HUB_OFFLINE", None)
-    try:
-        os.environ["HF_HUB_OFFLINE"] = "1"
-        tokenizer = AutoTokenizer.from_pretrained(
-            model.config.text_encoder_model, local_files_only=True
-        )
-    except Exception:
-        # Not cached yet — allow online download this one time
-        if _prev_offline is not None:
-            os.environ["HF_HUB_OFFLINE"] = _prev_offline
-        else:
-            os.environ.pop("HF_HUB_OFFLINE", None)
-        tokenizer = AutoTokenizer.from_pretrained(model.config.text_encoder_model)
-        logger.info("Tokenizer downloaded from HuggingFace (cached for future offline use)")
-    finally:
-        # Restore original environment
-        if _prev_offline is not None:
-            os.environ["HF_HUB_OFFLINE"] = _prev_offline
-        else:
-            os.environ.pop("HF_HUB_OFFLINE", None)
+    # Load tokenizer from persistent local cache (works fully offline after first download)
+    tokenizer_source = _ensure_tokenizer_downloaded(model.config.text_encoder_model)
+    tokenizer = AutoTokenizer.from_pretrained(
+        tokenizer_source, local_files_only=isinstance(tokenizer_source, Path)
+    )
 
     if attention != "auto":
         patch_attention(model, attention, device_str)
