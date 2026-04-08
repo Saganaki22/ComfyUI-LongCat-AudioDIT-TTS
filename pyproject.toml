@@ -8,6 +8,10 @@ dependencies = ["numpy", "soundfile", "transformers", "einops", "librosa", "safe
 [project.urls]
 Repository = "https://github.com/Saganaki22/ComfyUI-LongCat-AudioDIT-TTS"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--import-mode=importlib"
+
 [tool.comfy]
 PublisherId = "saganaki22"
 DisplayName = "LongCat AudioDiT TTS"

@@ -154,17 +154,20 @@ if _ensure_dependencies():
         from .nodes.tts_node import LongCatTTS
         from .nodes.voice_clone_node import LongCatVoiceCloneTTS
         from .nodes.multi_speaker_node import LongCatMultiSpeakerTTS
+        from .nodes.minimax_tts_node import MiniMaxTTS
 
         NODE_CLASS_MAPPINGS = {
             "LongCatTTS": LongCatTTS,
             "LongCatVoiceCloneTTS": LongCatVoiceCloneTTS,
             "LongCatMultiSpeakerTTS": LongCatMultiSpeakerTTS,
+            "MiniMaxTTS": MiniMaxTTS,
         }
 
         NODE_DISPLAY_NAME_MAPPINGS = {
             "LongCatTTS": "LongCat AudioDiT TTS",
             "LongCatVoiceCloneTTS": "LongCat AudioDiT Voice Clone TTS",
             "LongCatMultiSpeakerTTS": "LongCat AudioDiT Multi-Speaker TTS",
+            "MiniMaxTTS": "MiniMax TTS",
         }
 
         logger.info(
